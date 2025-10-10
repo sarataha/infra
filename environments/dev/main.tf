@@ -14,8 +14,8 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Environment = "dev"
-      Project     = "pawapay-sre"
+      Environment = var.environment
+      Project     = var.project_name
       ManagedBy   = "terraform"
     }
   }
@@ -32,8 +32,8 @@ module "vpc" {
   cluster_name         = var.cluster_name
 
   tags = {
-    Environment = "dev"
-    Project     = "pawapay-sre"
+    Environment = var.environment
+    Project     = var.project_name
   }
 }
 
@@ -43,7 +43,18 @@ module "iam" {
   cluster_name = var.cluster_name
 
   tags = {
-    Environment = "dev"
-    Project     = "pawapay-sre"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+module "ecr" {
+  source = "../../modules/ecr"
+
+  repository_name = var.ecr_repository_name
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
   }
 }

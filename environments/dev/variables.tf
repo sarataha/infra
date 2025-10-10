@@ -39,3 +39,15 @@ variable "private_subnet_cidrs" {
   type        = list(string)
   default     = ["10.0.10.0/24", "10.0.20.0/24"]
 }
+
+variable "ecr_repository_name" {
+  description = "ECR repository name for operator"
+  type        = string
+  default     = "configmirror-operator"
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "dev"
+}
