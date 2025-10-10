@@ -40,9 +40,9 @@ variable "kubernetes_version" {
 }
 
 variable "enable_public_access" {
-  description = "Enable public API server endpoint (WARNING: Restrict public_access_cidrs in production)"
+  description = "Enable public API server endpoint"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "public_access_cidrs" {

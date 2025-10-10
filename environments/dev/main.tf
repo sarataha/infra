@@ -91,10 +91,9 @@ module "eks" {
   public_subnet_ids  = module.vpc.public_subnet_ids
   private_subnet_ids = module.vpc.private_subnet_ids
 
-  kubernetes_version = var.kubernetes_version
-  # Production best practice: Private API endpoint only
-  # Access via AWS Systems Manager Session Manager (see README)
-  enable_public_access = false
+  kubernetes_version   = var.kubernetes_version
+  enable_public_access = true
+  public_access_cidrs  = ["197.63.233.77/32"]
   desired_size         = var.desired_node_count
   max_size             = var.max_node_count
   min_size             = var.min_node_count
