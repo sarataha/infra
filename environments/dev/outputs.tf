@@ -42,3 +42,24 @@ output "rds_secret_arn" {
   description = "ARN of Secrets Manager secret with RDS credentials"
   value       = module.rds.db_secret_arn
 }
+
+output "eks_cluster_name" {
+  description = "EKS cluster name"
+  value       = module.eks.cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  description = "EKS cluster endpoint"
+  value       = module.eks.cluster_endpoint
+}
+
+output "eks_cluster_version" {
+  description = "EKS cluster Kubernetes version"
+  value       = module.eks.cluster_version
+}
+
+output "eks_cluster_certificate_authority_data" {
+  description = "Base64 encoded certificate data for cluster authentication"
+  value       = module.eks.cluster_certificate_authority_data
+  sensitive   = true
+}

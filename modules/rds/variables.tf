@@ -21,7 +21,7 @@ variable "private_subnet_ids" {
 variable "engine_version" {
   description = "PostgreSQL engine version"
   type        = string
-  default     = "16.3"
+  default     = "17.6"
 }
 
 variable "instance_class" {
