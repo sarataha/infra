@@ -51,3 +51,9 @@ variable "environment" {
   type        = string
   default     = "dev"
 }
+
+variable "db_name" {
+  description = "RDS database name"
+  type        = string
+  default     = "configmirror"
+}

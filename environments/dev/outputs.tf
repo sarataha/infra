@@ -27,3 +27,18 @@ output "ecr_repository_url" {
   description = "ECR repository URL"
   value       = module.ecr.repository_url
 }
+
+output "rds_endpoint" {
+  description = "RDS endpoint"
+  value       = module.rds.db_instance_endpoint
+}
+
+output "rds_database_name" {
+  description = "RDS database name"
+  value       = module.rds.db_instance_name
+}
+
+output "rds_secret_arn" {
+  description = "ARN of Secrets Manager secret with RDS credentials"
+  value       = module.rds.db_secret_arn
+}
