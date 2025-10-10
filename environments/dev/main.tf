@@ -36,3 +36,14 @@ module "vpc" {
     Project     = "pawapay-sre"
   }
 }
+
+module "iam" {
+  source = "../../modules/iam"
+
+  cluster_name = var.cluster_name
+
+  tags = {
+    Environment = "dev"
+    Project     = "pawapay-sre"
+  }
+}
