@@ -5,9 +5,14 @@ resource "random_password" "master" {
 }
 
 resource "aws_secretsmanager_secret" "db_password" {
-  name = "${var.name}-rds-master-password"
+  name                    = "${var.name}-rds-master-password"
+  force_overwrite_replica_secret = true
 
   tags = var.tags
+
+  lifecycle {
+    ignore_changes = [recovery_window_in_days]
+  }
 }
 
 resource "aws_secretsmanager_secret_version" "db_password" {

@@ -1,0 +1,182 @@
+name: Terraform CI/CD
+
+on:
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'modules/**'
+      - 'environments/**'
+      - 'terragrunt.hcl'
+      - '.github/workflows/terraform-ci.yml'
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'modules/**'
+      - 'environments/**'
+      - 'terragrunt.hcl'
+      - '.github/workflows/terraform-ci.yml'
+  workflow_dispatch:
+
+env:
+  TF_VERSION: '1.10.4'
+  TG_VERSION: '0.72.7'
+  TFLINT_VERSION: 'v0.54.0'
+
+jobs:
+  validate:
+    name: Validate Terraform Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Setup Terragrunt
+        run: |
+          wget -q https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.TG_VERSION }}/terragrunt_linux_amd64
+          chmod +x terragrunt_linux_amd64
+          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+          terragrunt --version
+
+      - name: Terraform Format Check
+        run: |
+          echo "Checking Terraform formatting..."
+          terraform fmt -check -recursive modules/
+
+      - name: Validate Modules
+        run: |
+          echo "Validating VPC module..."
+          cd modules/vpc && terraform init -backend=false && terraform validate
+          cd ../..
+
+          echo "Validating IAM module..."
+          cd modules/iam && terraform init -backend=false && terraform validate
+          cd ../..
+
+          echo "Validating ECR module..."
+          cd modules/ecr && terraform init -backend=false && terraform validate
+          cd ../..
+
+          echo "Validating RDS module..."
+          cd modules/rds && terraform init -backend=false && terraform validate
+          cd ../..
+
+          echo "Validating EKS module..."
+          cd modules/eks && terraform init -backend=false && terraform validate
+          cd ../..
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: Initialize TFLint
+        run: tflint --init
+
+      - name: Run TFLint
+        run: |
+          echo "Running TFLint on modules..."
+          for module in modules/*/; do
+            echo "Linting $module"
+            tflint --chdir="$module" --format compact
+          done
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: modules/
+          framework: terraform
+          soft_fail: true
+          output_format: cli
+
+  plan-dev:
+    name: Terragrunt Plan (Dev)
+    runs-on: ubuntu-latest
+    needs: [validate]
+    if: github.event_name == 'pull_request'
+
+    # Uncomment when AWS credentials are configured
+    # env:
+    #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #   AWS_REGION: us-east-1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Setup Terragrunt
+        run: |
+          wget -q https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.TG_VERSION }}/terragrunt_linux_amd64
+          chmod +x terragrunt_linux_amd64
+          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+
+      # Uncomment when ready to run actual plans
+      # - name: Terragrunt Plan All
+      #   run: |
+      #     cd environments/dev
+      #     terragrunt run-all plan --terragrunt-non-interactive
+
+      - name: Plan Status
+        run: |
+          echo "Terragrunt plan would run here with AWS credentials configured"
+          echo "Configure AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY secrets"
+
+  apply-dev:
+    name: Terragrunt Apply (Dev)
+    runs-on: ubuntu-latest
+    needs: [validate, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: dev
+
+    # Uncomment when AWS credentials are configured
+    # env:
+    #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #   AWS_REGION: us-east-1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Setup Terragrunt
+        run: |
+          wget -q https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.TG_VERSION }}/terragrunt_linux_amd64
+          chmod +x terragrunt_linux_amd64
+          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+
+      # Uncomment when ready to auto-apply (requires approval)
+      # - name: Terragrunt Apply All
+      #   run: |
+      #     cd environments/dev
+      #     terragrunt run-all apply --terragrunt-non-interactive
+
+      - name: Apply Status
+        run: |
+          echo "Terragrunt apply would run here with AWS credentials configured"
+          echo "Requires manual approval in GitHub environment settings"

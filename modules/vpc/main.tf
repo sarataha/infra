@@ -13,7 +13,6 @@ resource "aws_vpc" "main" {
   )
 }
 
-# Internet Gateway for public subnets
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
@@ -25,7 +24,6 @@ resource "aws_internet_gateway" "main" {
   )
 }
 
-# Public Subnets - for load balancers and NAT gateways
 resource "aws_subnet" "public" {
   count                   = length(var.public_subnet_cidrs)
   vpc_id                  = aws_vpc.main.id
@@ -43,7 +41,6 @@ resource "aws_subnet" "public" {
   )
 }
 
-# Private Subnets - for EKS nodes and RDS
 resource "aws_subnet" "private" {
   count             = length(var.private_subnet_cidrs)
   vpc_id            = aws_vpc.main.id
@@ -60,7 +57,6 @@ resource "aws_subnet" "private" {
   )
 }
 
-# Elastic IPs for NAT Gateways
 resource "aws_eip" "nat" {
   count  = length(var.availability_zones)
   domain = "vpc"
@@ -75,7 +71,6 @@ resource "aws_eip" "nat" {
   depends_on = [aws_internet_gateway.main]
 }
 
-# NAT Gateways
 resource "aws_nat_gateway" "main" {
   count         = length(var.availability_zones)
   allocation_id = aws_eip.nat[count.index].id
