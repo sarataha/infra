@@ -69,7 +69,7 @@ VPC (10.0.0.0/16)
 ## Directory Structure
 
 ```
-pawapay-infra/
+infra/
 ├── modules/
 │   ├── vpc/
 │   ├── iam/
@@ -125,6 +125,20 @@ Main config is in `environments/dev/terragrunt.hcl`. You might want to:
 - Change instance types (using t3.small for nodes)
 - Adjust node count (default is 2 nodes, min 1, max 4)
 
+## CI/CD Pipeline
+
+GitHub Actions workflow with Terraform formatting, TFLint, Checkov security scanning and OIDC authentication.
+
+## State Management
+
+Uses S3 (`pawapay-terraform-state-<account-id>`) with DynamoDB locking (`pawapay-terraform-locks`).
+
+If state gets locked:
+```bash
+aws dynamodb scan --table-name pawapay-terraform-locks --region us-east-1
+terragrunt force-unlock <lock-id>
+```
+
 ## Deployment
 
 ### Step 1: Bootstrap Infrastructure
@@ -141,6 +155,8 @@ This will set up:
 - GitHub OIDC provider for CI/CD
 - IAM role for Terraform GitHub Actions
 - IAM user for local development
+
+After bootstrap completes, add the GitHub secret to allow CI/CD. The script will output the role ARN - add it as `AWS_ROLE_ARN` secret in your repo settings.
 
 ### Step 2: Deploy Infrastructure
 
@@ -193,20 +209,6 @@ Push images:
 ```bash
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com
 docker push <ecr-url>:tag
-```
-
-## CI/CD Pipeline
-
-GitHub Actions workflow with Terraform formatting, TFLint, Checkov security scanning and OIDC authentication.
-
-## State Management
-
-Uses S3 (`pawapay-terraform-state-<account-id>`) with DynamoDB locking (`pawapay-terraform-locks`).
-
-If state gets locked:
-```bash
-aws dynamodb scan --table-name pawapay-terraform-locks --region us-east-1
-terragrunt force-unlock <lock-id>
 ```
 
 ## Troubleshooting

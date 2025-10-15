@@ -37,7 +37,7 @@ AWS_REGION="${AWS_REGION:-us-east-1}"
 BUCKET_NAME="${PROJECT_NAME}-terraform-state-${AWS_ACCOUNT_ID}"
 DYNAMODB_TABLE="${PROJECT_NAME}-terraform-locks"
 GITHUB_ORG="${GITHUB_ORG:-sarataha}"
-GITHUB_REPO="${GITHUB_REPO:-pawapay-infra}"
+GITHUB_REPO="${GITHUB_REPO:-infra}"
 IAM_ROLE_NAME="github-actions-terraform"
 
 echo -e "${YELLOW}Configuration:${NC}"
