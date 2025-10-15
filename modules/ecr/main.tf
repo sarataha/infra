@@ -10,10 +10,6 @@ resource "aws_ecr_repository" "configmirror_operator" {
     encryption_type = "AES256"
   }
 
-  lifecycle {
-    prevent_destroy = true
-  }
-
   tags = var.tags
 }
 

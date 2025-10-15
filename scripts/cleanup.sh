@@ -85,6 +85,13 @@ if aws iam get-user --user-name "${LOCAL_USER_NAME}" >/dev/null 2>&1; then
         aws iam detach-user-policy --user-name "${LOCAL_USER_NAME}" --policy-arn "${POLICY_ARN}"
         echo -e "${GREEN}Policy detached from user${NC}"
     fi
+
+    # Delete inline policies
+    INLINE_POLICIES=$(aws iam list-user-policies --user-name "${LOCAL_USER_NAME}" --query 'PolicyNames' --output text)
+    for policy in $INLINE_POLICIES; do
+        aws iam delete-user-policy --user-name "${LOCAL_USER_NAME}" --policy-name "$policy"
+        echo -e "${GREEN}Deleted inline policy: $policy${NC}"
+    done
 fi
 
 # Delete IAM user
@@ -104,6 +111,13 @@ if aws iam get-role --role-name "${IAM_ROLE_NAME}" >/dev/null 2>&1; then
         aws iam detach-role-policy --role-name "${IAM_ROLE_NAME}" --policy-arn "${POLICY_ARN}"
         echo -e "${GREEN}Policy detached from role${NC}"
     fi
+
+    # Delete inline policies
+    INLINE_POLICIES=$(aws iam list-role-policies --role-name "${IAM_ROLE_NAME}" --query 'PolicyNames' --output text)
+    for policy in $INLINE_POLICIES; do
+        aws iam delete-role-policy --role-name "${IAM_ROLE_NAME}" --policy-name "$policy"
+        echo -e "${GREEN}Deleted inline policy: $policy${NC}"
+    done
 fi
 
 # Delete IAM role
@@ -149,15 +163,22 @@ fi
 # Empty and delete S3 bucket
 echo -e "${YELLOW}Emptying S3 bucket...${NC}"
 if aws s3api head-bucket --bucket "${BUCKET_NAME}" >/dev/null 2>&1; then
-    # Delete all object versions
-    aws s3api list-object-versions --bucket "${BUCKET_NAME}" --query 'Versions[].{Key:Key,VersionId:VersionId}' --output json | \
-    jq -r '.[] | "--key \(.Key) --version-id \(.VersionId)"' | \
-    xargs -I {} aws s3api delete-object --bucket "${BUCKET_NAME}" {} || true
+    # Delete all objects and versions using AWS CLI
+    aws s3 rm s3://"${BUCKET_NAME}" --recursive || true
+
+    # Delete all versions
+    aws s3api list-object-versions --bucket "${BUCKET_NAME}" --output json | \
+    jq -r '.Versions[]? | .Key + " " + .VersionId' | \
+    while read key versionId; do
+        aws s3api delete-object --bucket "${BUCKET_NAME}" --key "$key" --version-id "$versionId" || true
+    done
 
     # Delete all delete markers
-    aws s3api list-object-versions --bucket "${BUCKET_NAME}" --query 'DeleteMarkers[].{Key:Key,VersionId:VersionId}' --output json | \
-    jq -r '.[] | "--key \(.Key) --version-id \(.VersionId)"' | \
-    xargs -I {} aws s3api delete-object --bucket "${BUCKET_NAME}" {} || true
+    aws s3api list-object-versions --bucket "${BUCKET_NAME}" --output json | \
+    jq -r '.DeleteMarkers[]? | .Key + " " + .VersionId' | \
+    while read key versionId; do
+        aws s3api delete-object --bucket "${BUCKET_NAME}" --key "$key" --version-id "$versionId" || true
+    done
 
     echo -e "${GREEN}S3 bucket emptied${NC}"
 
