@@ -10,7 +10,14 @@ resource "aws_ecr_repository" "configmirror_operator" {
     encryption_type = "AES256"
   }
 
-  tags = var.tags
+  tags = merge(
+    {
+      Environment = var.environment
+      Project     = var.project
+      ManagedBy   = "Terraform"
+    },
+    var.tags
+  )
 }
 
 resource "aws_ecr_lifecycle_policy" "configmirror_operator" {
