@@ -98,3 +98,19 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "access_entries" {
+  description = "Map of access entries to add to the cluster for kubectl access"
+  type = map(object({
+    iam_role_name = string
+    policy_associations = map(object({
+      policy_arn = string
+      access_scope = object({
+        type       = string
+        namespaces = optional(list(string))
+      })
+    }))
+    tags = optional(map(string))
+  }))
+  default = {}
+}

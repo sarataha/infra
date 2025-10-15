@@ -10,6 +10,10 @@ resource "aws_ecr_repository" "configmirror_operator" {
     encryption_type = "AES256"
   }
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = var.tags
 }
 
@@ -20,10 +24,10 @@ resource "aws_ecr_lifecycle_policy" "configmirror_operator" {
     rules = [
       {
         rulePriority = 1
-        description  = "Keep last 10 images"
+        description  = "Keep last 10 tagged images"
         selection = {
           tagStatus     = "tagged"
-          tagPrefixList = ["v"]
+          tagPrefixList = ["v", "sha-"]
           countType     = "imageCountMoreThan"
           countNumber   = 10
         }

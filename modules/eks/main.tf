@@ -12,6 +12,10 @@ resource "aws_eks_cluster" "main" {
     public_access_cidrs     = var.public_access_cidrs
   }
 
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
+
   enabled_cluster_log_types = [
     "api",
     "audit",
@@ -176,4 +180,99 @@ resource "aws_iam_openid_connect_provider" "eks" {
   url             = aws_eks_cluster.main.identity[0].oidc[0].issuer
 
   tags = var.tags
+}
+
+################################################################################
+# EKS Access Entries for kubectl access
+################################################################################
+
+data "aws_caller_identity" "current" {}
+
+locals {
+  # Flatten policy associations per entry
+  flattened_access_entries = flatten([
+    for entry_key, entry in var.access_entries : [
+      for pol_key, pol in entry.policy_associations : {
+        entry_key    = entry_key
+        pol_key      = pol_key
+        policy_arn   = pol.policy_arn
+        access_scope = pol.access_scope
+      }
+    ]
+  ])
+}
+
+# IAM roles for kubectl access
+resource "aws_iam_role" "kubectl_access" {
+  for_each = var.access_entries
+
+  name = each.value.iam_role_name
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = merge(
+    var.tags,
+    lookup(each.value, "tags", {})
+  )
+}
+
+# IAM policy for EKS API access
+resource "aws_iam_role_policy" "kubectl_eks_access" {
+  for_each = var.access_entries
+
+  name = "${each.value.iam_role_name}-eks-access"
+  role = aws_iam_role.kubectl_access[each.key].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "eks:DescribeCluster",
+          "eks:ListClusters",
+          "eks:AccessKubernetesApi"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# EKS access entries
+resource "aws_eks_access_entry" "kubectl" {
+  for_each = var.access_entries
+
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = aws_iam_role.kubectl_access[each.key].arn
+  type          = "STANDARD"
+
+  depends_on = [aws_eks_cluster.main]
+}
+
+# EKS access policy associations
+resource "aws_eks_access_policy_association" "kubectl" {
+  for_each = { for v in local.flattened_access_entries : "${v.entry_key}_${v.pol_key}" => v }
+
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = aws_iam_role.kubectl_access[each.value.entry_key].arn
+  policy_arn    = each.value.policy_arn
+
+  access_scope {
+    type       = each.value.access_scope.type
+    namespaces = lookup(each.value.access_scope, "namespaces", null)
+  }
+
+  depends_on = [aws_eks_access_entry.kubectl]
 }

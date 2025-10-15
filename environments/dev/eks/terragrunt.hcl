@@ -48,4 +48,45 @@ inputs = {
   max_size           = tonumber(get_env("TG_MAX_NODE_COUNT", "4"))
   min_size           = tonumber(get_env("TG_MIN_NODE_COUNT", "1"))
   instance_types     = jsondecode(get_env("TG_NODE_INSTANCE_TYPES", "[\"t3.small\"]"))
+
+  # kubectl access entries
+  access_entries = {
+    admin = {
+      iam_role_name = "pawapay-eks-dev-admin"
+      policy_associations = {
+        cluster_admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+      tags = {
+        Description = "EKS cluster admin role for full kubectl access"
+      }
+    }
+
+    user = {
+      iam_role_name = "pawapay-eks-dev-user"
+      policy_associations = {
+        default_edit = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
+          access_scope = {
+            type       = "namespace"
+            namespaces = ["default"]
+          }
+        }
+        kube_system_view = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+          access_scope = {
+            type       = "namespace"
+            namespaces = ["kube-system"]
+          }
+        }
+      }
+      tags = {
+        Description = "EKS developer role with edit access to default and view access to kube-system"
+      }
+    }
+  }
 }

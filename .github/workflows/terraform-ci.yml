@@ -1,4 +1,4 @@
-name: Terraform CI/CD
+name: Terraform CI
 
 on:
   pull_request:
@@ -6,21 +6,21 @@ on:
     paths:
       - 'modules/**'
       - 'environments/**'
-      - 'terragrunt.hcl'
+      - 'root.hcl'
       - '.github/workflows/terraform-ci.yml'
   push:
     branches: [ main, master ]
     paths:
       - 'modules/**'
       - 'environments/**'
-      - 'terragrunt.hcl'
+      - 'root.hcl'
       - '.github/workflows/terraform-ci.yml'
   workflow_dispatch:
 
 env:
-  TF_VERSION: '1.10.4'
-  TG_VERSION: '0.72.7'
-  TFLINT_VERSION: 'v0.54.0'
+  TF_VERSION: '1.13.3'
+  TG_VERSION: '0.78.0'
+  TFLINT_VERSION: 'v0.59.1'
 
 jobs:
   validate:
@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -71,6 +71,10 @@ jobs:
           cd modules/eks && terraform init -backend=false && terraform validate
           cd ../..
 
+          echo "Validating GitHub OIDC module..."
+          cd modules/github-oidc && terraform init -backend=false && terraform validate
+          cd ../..
+
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v4
         with:
@@ -92,7 +96,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run Checkov
         uses: bridgecrewio/checkov-action@v12
@@ -108,15 +112,20 @@ jobs:
     needs: [validate]
     if: github.event_name == 'pull_request'
 
-    # Uncomment when AWS credentials are configured
-    # env:
-    #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #   AWS_REGION: us-east-1
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -130,16 +139,10 @@ jobs:
           chmod +x terragrunt_linux_amd64
           sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
 
-      # Uncomment when ready to run actual plans
-      # - name: Terragrunt Plan All
-      #   run: |
-      #     cd environments/dev
-      #     terragrunt run-all plan --terragrunt-non-interactive
-
-      - name: Plan Status
+      - name: Terragrunt Plan All
         run: |
-          echo "Terragrunt plan would run here with AWS credentials configured"
-          echo "Configure AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY secrets"
+          cd environments/dev
+          terragrunt run-all plan --terragrunt-non-interactive
 
   apply-dev:
     name: Terragrunt Apply (Dev)
@@ -148,15 +151,19 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: dev
 
-    # Uncomment when AWS credentials are configured
-    # env:
-    #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #   AWS_REGION: us-east-1
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -170,13 +177,7 @@ jobs:
           chmod +x terragrunt_linux_amd64
           sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
 
-      # Uncomment when ready to auto-apply (requires approval)
-      # - name: Terragrunt Apply All
-      #   run: |
-      #     cd environments/dev
-      #     terragrunt run-all apply --terragrunt-non-interactive
-
-      - name: Apply Status
+      - name: Terragrunt Apply All
         run: |
-          echo "Terragrunt apply would run here with AWS credentials configured"
-          echo "Requires manual approval in GitHub environment settings"
+          cd environments/dev
+          terragrunt run-all apply --terragrunt-non-interactive

@@ -73,3 +73,13 @@ output "oidc_provider_url" {
   description = "URL of the OIDC Provider for EKS"
   value       = aws_iam_openid_connect_provider.eks.url
 }
+
+output "kubectl_access_role_arns" {
+  description = "Map of kubectl access role ARNs"
+  value       = { for k, v in aws_iam_role.kubectl_access : k => v.arn }
+}
+
+output "kubectl_access_role_names" {
+  description = "Map of kubectl access role names"
+  value       = { for k, v in aws_iam_role.kubectl_access : k => v.name }
+}
