@@ -58,6 +58,7 @@
         "ec2:DescribeRouteTables",
         "ec2:DescribeSecurityGroups",
         "ec2:DescribeSubnets",
+        "ec2:DescribeSecurityGroupRules",
         "ec2:DescribeVpcAttribute",
         "ec2:DescribeVpcs",
         "ec2:ModifySubnetAttribute",
@@ -73,10 +74,12 @@
         "eks:CreateAddon",
         "eks:CreateCluster",
         "eks:CreateNodegroup",
+        "eks:DescribeAccessEntry",
         "eks:DescribeAddon",
         "eks:DescribeAddonVersions",
         "eks:DescribeCluster",
         "eks:DescribeNodegroup",
+        "eks:ListAssociatedAccessPolicies",
         "eks:TagResource"
       ],
       "Resource": "*"
@@ -88,7 +91,8 @@
         "rds:CreateDBInstance",
         "rds:CreateDBSubnetGroup",
         "rds:DescribeDBInstances",
-        "rds:DescribeDBSubnetGroups"
+        "rds:DescribeDBSubnetGroups",
+        "rds:ListTagsForResource"
       ],
       "Resource": "*"
     },
@@ -117,6 +121,7 @@
         "iam:GetRole",
         "iam:GetRolePolicy",
         "iam:ListAttachedRolePolicies",
+        "iam:ListOpenIDConnectProviders",
         "iam:ListRolePolicies",
         "iam:PassRole",
         "iam:PutRolePolicy",
@@ -138,7 +143,10 @@
         "kms:EnableKeyRotation",
         "kms:Encrypt",
         "kms:GenerateDataKey",
+        "kms:GetKeyPolicy",
         "kms:GetKeyRotationStatus",
+        "kms:ListAliases",
+        "kms:ListResourceTags",
         "kms:PutKeyPolicy",
         "kms:TagResource"
       ],
@@ -151,6 +159,7 @@
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
         "logs:DescribeLogGroups",
+        "logs:ListTagsForResource",
         "logs:PutRetentionPolicy",
         "logs:TagResource"
       ],
@@ -173,6 +182,7 @@
       "Action": [
         "secretsmanager:CreateSecret",
         "secretsmanager:DescribeSecret",
+        "secretsmanager:GetResourcePolicy",
         "secretsmanager:GetSecretValue",
         "secretsmanager:PutSecretValue"
       ],
