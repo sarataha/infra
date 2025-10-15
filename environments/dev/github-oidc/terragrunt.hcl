@@ -16,7 +16,32 @@ dependency "ecr" {
 }
 
 inputs = {
-  github_org         = "sarataha"
-  github_repo        = "configmirror-operator"
-  ecr_repository_arn = dependency.ecr.outputs.repository_arn
+  role_name   = "github-actions-ecr-push"
+  github_org  = get_env("TG_GITHUB_ORG", "sarataha")
+  github_repo = get_env("TG_GITHUB_REPO", "configmirror-operator")
+
+  policy_statements = [
+    {
+      effect    = "Allow"
+      actions   = ["ecr:GetAuthorizationToken"]
+      resources = ["*"]
+    },
+    {
+      effect = "Allow"
+      actions = [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:GetRepositoryPolicy",
+        "ecr:DescribeRepositories",
+        "ecr:ListImages",
+        "ecr:DescribeImages",
+        "ecr:BatchGetImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:PutImage"
+      ]
+      resources = [dependency.ecr.outputs.repository_arn]
+    }
+  ]
 }

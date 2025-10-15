@@ -24,6 +24,5 @@ inputs = {
   private_subnet_ids  = dependency.vpc.outputs.private_subnet_ids
   database_name       = get_env("TG_DB_NAME", "configmirror")
   master_username     = "postgres"
-  skip_final_snapshot = true
   multi_az            = true
 }

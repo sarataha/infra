@@ -1,3 +1,8 @@
+variable "role_name" {
+  description = "Name of the IAM role to create"
+  type        = string
+}
+
 variable "github_org" {
   description = "GitHub organization or username"
   type        = string
@@ -8,9 +13,13 @@ variable "github_repo" {
   type        = string
 }
 
-variable "ecr_repository_arn" {
-  description = "ARN of the ECR repository to allow push access"
-  type        = string
+variable "policy_statements" {
+  description = "List of IAM policy statements to attach to the role"
+  type = list(object({
+    effect    = string
+    actions   = list(string)
+    resources = list(string)
+  }))
 }
 
 variable "tags" {
