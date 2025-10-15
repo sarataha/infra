@@ -147,9 +147,9 @@ This will set up:
 Deploy everything:
 ```bash
 cd environments/dev
-terragrunt run-all init
-terragrunt run-all plan
-terragrunt run-all apply
+terragrunt run --all init
+terragrunt run --all plan
+terragrunt run --all apply
 ```
 
 Or deploy in order: VPC, IAM, ECR (_global/ecr), RDS, EKS, GitHub OIDC
@@ -164,7 +164,7 @@ kubectl get nodes
 Check outputs:
 ```bash
 cd environments/dev
-terragrunt run-all output
+terragrunt run --all output
 ```
 
 ## Accessing Resources
@@ -247,7 +247,7 @@ RDS has encryption and passwords in Secrets Manager. Nodes and RDS are in privat
 Destroy everything:
 ```bash
 cd environments/dev
-terragrunt run-all destroy
+terragrunt run --all destroy
 ```
 
 Then remove state bucket and DynamoDB table:

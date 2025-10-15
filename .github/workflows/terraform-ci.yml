@@ -144,7 +144,7 @@ jobs:
       - name: Terragrunt Plan All
         run: |
           cd environments/dev
-          terragrunt run-all plan --terragrunt-non-interactive
+          terragrunt run --all plan
 
   apply-dev:
     name: Terragrunt Apply (Dev)
@@ -184,4 +184,4 @@ jobs:
       - name: Terragrunt Apply All
         run: |
           cd environments/dev
-          terragrunt run-all apply --terragrunt-non-interactive
+          terragrunt run --all apply
