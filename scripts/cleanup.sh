@@ -1,5 +1,5 @@
 #!/bin/bash
-# Cleanup Bootstrap Infrastructure
+# Cleanup Bootstrap Infra
 # This script destroys:
 # 1. IAM user for local development
 # 2. IAM role for Terraform CI/CD
@@ -16,10 +16,10 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${RED}========================================${NC}"
-echo -e "${RED}  Bootstrap Infrastructure Cleanup${NC}"
+echo -e "${RED}  Bootstrap Infra Cleanup${NC}"
 echo -e "${RED}========================================${NC}"
 echo ""
-echo -e "${YELLOW}WARNING: This will destroy all bootstrap infrastructure!${NC}"
+echo -e "${YELLOW}WARNING: This will destroy all bootstrap infra!${NC}"
 echo -e "${YELLOW}Make sure you have destroyed all Terraform-managed resources first!${NC}"
 echo ""
 
@@ -194,5 +194,5 @@ echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}  Cleanup Complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
-echo -e "${YELLOW}All bootstrap infrastructure has been destroyed.${NC}"
+echo -e "${YELLOW}All bootstrap infra has been destroyed.${NC}"
 echo ""

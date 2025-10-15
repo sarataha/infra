@@ -1,6 +1,6 @@
-# PawaPay Infrastructure
+# AWS EKS Infra
 
-AWS infrastructure for the ConfigMirror Kubernetes operator, built with Terraform and Terragrunt. Includes remote state management, DRY configuration and security controls.
+AWS infra for the [configmirror-operator](https://github.com/sarataha/configmirror-operator) demo, built with Terraform and Terragrunt. Includes remote state management, DRY configuration and security controls.
 
 ## Architecture Overview
 
@@ -115,7 +115,7 @@ Verify access:
 aws sts get-caller-identity
 ```
 
-Required permissions: EC2, EKS, RDS, ECR, IAM, S3, DynamoDB, CloudWatch, Secrets Manager. Using AdministratorAccess for dev is fine, or use the least-privilege policy in `scripts/terraform-policy.json`.
+Required permissions: EC2, EKS, RDS, ECR, IAM, S3, DynamoDB, CloudWatch, Secrets Manager. A least-privilege IAM policy is provided in `scripts/terraform-iam-policy.json`.
 
 ## Configuration
 
@@ -127,7 +127,7 @@ Main config is in `environments/dev/terragrunt.hcl`. You might want to:
 
 ## CI/CD Pipeline
 
-GitHub Actions workflow with Terraform formatting, TFLint, Checkov security scanning and OIDC authentication.
+GitHub Actions workflow with Terraform formatting, TFLint, Checkov security scanning and OIDC authentication. For production, I'd integrate Atlantis for PR-based Terraform workflows with plan/apply automation.
 
 ## State Management
 
@@ -141,7 +141,7 @@ terragrunt force-unlock <lock-id>
 
 ## Deployment
 
-### Step 1: Bootstrap Infrastructure
+### Step 1: Bootstrap Infra
 
 Run the bootstrap script to create S3 bucket, DynamoDB table, GitHub OIDC provider, and IAM roles:
 
@@ -158,7 +158,7 @@ This will set up:
 
 After bootstrap completes, add the GitHub secret to allow CI/CD. The script will output the role ARN - add it as `AWS_ROLE_ARN` secret in your repo settings.
 
-### Step 2: Deploy Infrastructure
+### Step 2: Deploy Infra
 
 Deploy everything:
 ```bash
@@ -234,19 +234,35 @@ export TF_LOG=DEBUG
 
 ## Security & Assumptions
 
-RDS has encryption and passwords in Secrets Manager. Nodes and RDS are in private subnets. EKS control plane logging is on. State is encrypted in S3. kubectl access through IAM roles. GitHub OIDC for CI/CD so no hardcoded AWS keys.
+**Security features:**
+- RDS encryption enabled with credentials in Secrets Manager
+- EKS nodes and RDS in private subnets
+- EKS control plane logging enabled
+- Terraform state encrypted in S3
+- kubectl access via IAM roles
+- GitHub Actions use OIDC authentication
 
 **Assumptions made:**
 - Single region deployment (us-east-1) - can be changed in root.hcl
 - Multi-AZ setup with 2 availability zones for high availability
 - VPC CIDR 10.0.0.0/16 - configurable via TG_VPC_CIDR env var
-- EKS public endpoint is set to 0.0.0.0/0 with IAM auth - all requests need valid AWS credentials. Makes it easier for dynamic IPs and GitHub Actions. In production we'd lock this down to specific IPs or go private-only with VPN.
+- EKS public endpoint is set to 0.0.0.0/0 with IAM auth - all requests need valid AWS credentials. Makes it easier for dynamic IPs and GitHub Actions. But ideally in a prod env I'd restrict this to specific CIDR blocks or use a private-only endpoint with VPN/bastion host.
 - EKS control plane placed in private subnets for security
 - RDS master username is "postgres" - standard default
 
+**Sizing:**
+- Chose t3.small nodes since they're good enough for demo purposes. Real prod would probably need t3.medium or larger
+- Running 2 nodes that can scale to 4 which works fine for this assignment case but I'd start with at least 3 in production env
+- RDS is single-AZ to save on cost and keep setup simple but multi AZ is a must for actual production
+
 ## Cleanup
 
-Destroy everything:
+Quick cleanup with script:
+```bash
+./scripts/cleanup.sh
+```
+
+Or manually destroy everything:
 ```bash
 cd environments/dev
 terragrunt run --all destroy
