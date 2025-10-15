@@ -2,31 +2,23 @@
 # https://github.com/terraform-linters/tflint
 
 config {
-  # Enable module inspection
-  module = true
-
-  # Force specific version
+  call_module_type = "all"
   force = false
-
-  # Disabled by default rules
   disabled_by_default = false
 }
 
-# Enable AWS plugin
 plugin "aws" {
   enabled = true
-  version = "0.35.0"
+  version = "0.43.0"
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
 
-# Enable Terraform plugin
 plugin "terraform" {
   enabled = true
-  version = "0.11.0"
+  version = "0.13.0"
   source  = "github.com/terraform-linters/tflint-ruleset-terraform"
 }
 
-# AWS-specific rules
 rule "aws_resource_missing_tags" {
   enabled = true
   tags = ["Environment", "Project", "ManagedBy"]
@@ -40,7 +32,6 @@ rule "aws_db_instance_invalid_type" {
   enabled = true
 }
 
-# Terraform best practices
 rule "terraform_required_version" {
   enabled = true
 }
