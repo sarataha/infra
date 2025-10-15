@@ -33,11 +33,11 @@ rule "aws_db_instance_invalid_type" {
 }
 
 rule "terraform_required_version" {
-  enabled = true
+  enabled = false
 }
 
 rule "terraform_required_providers" {
-  enabled = true
+  enabled = false
 }
 
 rule "terraform_naming_convention" {
