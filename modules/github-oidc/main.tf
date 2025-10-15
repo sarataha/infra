@@ -1,3 +1,11 @@
+locals {
+  common_tags = {
+    Environment = var.environment
+    Project     = var.project
+    ManagedBy   = "Terraform"
+  }
+}
+
 # Data source to reference the OIDC provider created by bootstrap script
 data "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
@@ -27,7 +35,7 @@ resource "aws_iam_role" "github_actions" {
     ]
   })
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 }
 
 resource "aws_iam_role_policy" "github_actions" {

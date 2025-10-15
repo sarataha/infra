@@ -1,5 +1,13 @@
 # AWS EKS Best Practices: https://docs.aws.amazon.com/eks/latest/best-practices/introduction.html
 
+locals {
+  common_tags = {
+    Environment = var.environment
+    Project     = var.project
+    ManagedBy   = "Terraform"
+  }
+}
+
 resource "aws_eks_cluster" "main" {
   name     = var.cluster_name
   role_arn = var.cluster_role_arn
@@ -35,7 +43,7 @@ resource "aws_eks_cluster" "main" {
     aws_cloudwatch_log_group.eks
   ]
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 }
 
 resource "aws_eks_node_group" "main" {
@@ -61,11 +69,12 @@ resource "aws_eks_node_group" "main" {
   disk_size      = var.disk_size
 
   labels = {
-    Environment = var.tags["Environment"]
+    Environment = var.environment
     NodeGroup   = "main"
   }
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
       Name = "${var.cluster_name}-node-group"
@@ -87,6 +96,7 @@ resource "aws_kms_key" "eks" {
   enable_key_rotation     = true
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
       Name = "${var.cluster_name}-eks-key"
@@ -103,7 +113,7 @@ resource "aws_cloudwatch_log_group" "eks" {
   name              = "/aws/eks/${var.cluster_name}/cluster"
   retention_in_days = var.log_retention_days
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 }
 
 resource "aws_security_group" "cluster_additional" {
@@ -112,6 +122,7 @@ resource "aws_security_group" "cluster_additional" {
   vpc_id      = var.vpc_id
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
       Name = "${var.cluster_name}-additional-sg"
@@ -145,7 +156,7 @@ resource "aws_eks_addon" "vpc_cni" {
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "OVERWRITE"
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 }
 
 resource "aws_eks_addon" "kube_proxy" {
@@ -154,7 +165,7 @@ resource "aws_eks_addon" "kube_proxy" {
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "OVERWRITE"
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 }
 
 resource "aws_eks_addon" "coredns" {
@@ -163,7 +174,7 @@ resource "aws_eks_addon" "coredns" {
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "OVERWRITE"
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 
   depends_on = [
     aws_eks_node_group.main
@@ -179,7 +190,7 @@ resource "aws_iam_openid_connect_provider" "eks" {
   thumbprint_list = [data.tls_certificate.eks.certificates[0].sha1_fingerprint]
   url             = aws_eks_cluster.main.identity[0].oidc[0].issuer
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 }
 
 ################################################################################
@@ -222,6 +233,7 @@ resource "aws_iam_role" "kubectl_access" {
   })
 
   tags = merge(
+    local.common_tags,
     var.tags,
     lookup(each.value, "tags", {})
   )

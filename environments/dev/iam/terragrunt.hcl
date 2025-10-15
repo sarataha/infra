@@ -12,4 +12,6 @@ dependencies {
 
 inputs = {
   cluster_name = get_env("TG_CLUSTER_NAME", "pawapay-eks-dev")
+  environment  = "dev"
+  project      = "pawapay"
 }

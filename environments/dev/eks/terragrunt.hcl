@@ -30,6 +30,8 @@ dependency "iam" {
 
 inputs = {
   cluster_name       = get_env("TG_CLUSTER_NAME", "pawapay-eks-dev")
+  environment        = "dev"
+  project            = "pawapay"
   cluster_role_arn   = dependency.iam.outputs.eks_cluster_role_arn
   node_role_arn      = dependency.iam.outputs.eks_node_role_arn
   vpc_id             = dependency.vpc.outputs.vpc_id

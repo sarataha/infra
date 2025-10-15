@@ -22,8 +22,18 @@ variable "policy_statements" {
   }))
 }
 
+variable "environment" {
+  description = "Environment name (e.g., dev, staging, prod)"
+  type        = string
+}
+
+variable "project" {
+  description = "Project name"
+  type        = string
+}
+
 variable "tags" {
-  description = "Tags to apply to resources"
+  description = "Additional tags to apply to resources"
   type        = map(string)
   default     = {}
 }

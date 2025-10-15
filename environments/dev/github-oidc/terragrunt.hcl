@@ -17,6 +17,8 @@ dependency "ecr" {
 
 inputs = {
   role_name   = "github-actions-ecr-push"
+  environment = "dev"
+  project     = "pawapay"
   github_org  = get_env("TG_GITHUB_ORG", "sarataha")
   github_repo = get_env("TG_GITHUB_REPO", "configmirror-operator")
 

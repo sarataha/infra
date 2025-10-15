@@ -19,6 +19,8 @@ dependency "vpc" {
 
 inputs = {
   name                = get_env("TG_PROJECT_NAME", "pawapay")
+  environment         = "dev"
+  project             = "pawapay"
   vpc_id              = dependency.vpc.outputs.vpc_id
   vpc_cidr            = dependency.vpc.outputs.vpc_cidr
   private_subnet_ids  = dependency.vpc.outputs.private_subnet_ids

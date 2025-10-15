@@ -1,3 +1,11 @@
+locals {
+  common_tags = {
+    Environment = var.environment
+    Project     = var.project
+    ManagedBy   = "Terraform"
+  }
+}
+
 resource "random_password" "master" {
   length           = 32
   special          = true
@@ -8,7 +16,7 @@ resource "aws_secretsmanager_secret" "db_password" {
   name                           = "${var.name}-rds-master-password"
   force_overwrite_replica_secret = true
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 
   lifecycle {
     ignore_changes = [recovery_window_in_days]
@@ -31,7 +39,7 @@ resource "aws_db_subnet_group" "main" {
   name       = "${var.name}-db-subnet-group"
   subnet_ids = var.private_subnet_ids
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 }
 
 resource "aws_security_group" "rds" {
@@ -56,6 +64,7 @@ resource "aws_security_group" "rds" {
   }
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
       Name = "${var.name}-rds-sg"
@@ -87,5 +96,5 @@ resource "aws_db_instance" "main" {
 
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 }

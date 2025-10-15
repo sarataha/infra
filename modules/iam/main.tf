@@ -1,3 +1,11 @@
+locals {
+  common_tags = {
+    Environment = var.environment
+    Project     = var.project
+    ManagedBy   = "Terraform"
+  }
+}
+
 data "aws_iam_policy_document" "eks_assume_role" {
   statement {
     effect = "Allow"
@@ -15,7 +23,7 @@ resource "aws_iam_role" "eks_cluster" {
   name               = "${var.cluster_name}-cluster-role"
   assume_role_policy = data.aws_iam_policy_document.eks_assume_role.json
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 }
 
 resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
@@ -40,7 +48,7 @@ resource "aws_iam_role" "eks_nodes" {
   name               = "${var.cluster_name}-node-role"
   assume_role_policy = data.aws_iam_policy_document.eks_node_assume_role.json
 
-  tags = var.tags
+  tags = merge(local.common_tags, var.tags)
 }
 
 resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
