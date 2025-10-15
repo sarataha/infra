@@ -1,11 +1,11 @@
 resource "random_password" "master" {
-  length  = 32
-  special = true
+  length           = 32
+  special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
 resource "aws_secretsmanager_secret" "db_password" {
-  name                    = "${var.name}-rds-master-password"
+  name                           = "${var.name}-rds-master-password"
   force_overwrite_replica_secret = true
 
   tags = var.tags
@@ -16,7 +16,7 @@ resource "aws_secretsmanager_secret" "db_password" {
 }
 
 resource "aws_secretsmanager_secret_version" "db_password" {
-  secret_id     = aws_secretsmanager_secret.db_password.id
+  secret_id = aws_secretsmanager_secret.db_password.id
   secret_string = jsonencode({
     username = var.master_username
     password = random_password.master.result
@@ -79,10 +79,10 @@ resource "aws_db_instance" "main" {
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]
 
-  multi_az               = var.multi_az
-  publicly_accessible    = false
-  backup_retention_period = 7
-  skip_final_snapshot    = var.skip_final_snapshot
+  multi_az                  = var.multi_az
+  publicly_accessible       = false
+  backup_retention_period   = 7
+  skip_final_snapshot       = var.skip_final_snapshot
   final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.name}-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
 
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
