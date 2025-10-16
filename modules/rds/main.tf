@@ -6,6 +6,62 @@ locals {
   }
 }
 
+resource "aws_kms_key" "rds" {
+  description             = "KMS key for RDS Secrets Manager encryption"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Secrets Manager to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "secretsmanager.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:CreateGrant",
+          "kms:GenerateDataKey"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "kms:ViaService" = "secretsmanager.${data.aws_region.current.region}.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = merge(
+    local.common_tags,
+    var.tags,
+    {
+      Name = "${var.name}-rds-secrets-kms"
+    }
+  )
+}
+
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_kms_alias" "rds" {
+  name          = "alias/${var.name}-rds-secrets"
+  target_key_id = aws_kms_key.rds.key_id
+}
+
 resource "random_password" "master" {
   length           = 32
   special          = true
@@ -15,6 +71,7 @@ resource "random_password" "master" {
 resource "aws_secretsmanager_secret" "db_password" {
   name                           = "${var.name}-rds-master-password"
   force_overwrite_replica_secret = true
+  kms_key_id                     = aws_kms_key.rds.arn
 
   tags = merge(local.common_tags, var.tags)
 
@@ -80,6 +137,7 @@ resource "aws_db_instance" "main" {
   allocated_storage = var.allocated_storage
   storage_type      = "gp3"
   storage_encrypted = true
+  kms_key_id        = aws_kms_key.rds.arn
 
   db_name  = var.database_name
   username = var.master_username
@@ -88,11 +146,13 @@ resource "aws_db_instance" "main" {
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]
 
-  multi_az                  = var.multi_az
-  publicly_accessible       = false
-  backup_retention_period   = 7
-  skip_final_snapshot       = var.skip_final_snapshot
-  final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.name}-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
+  multi_az                   = var.multi_az
+  publicly_accessible        = false
+  backup_retention_period    = 7
+  skip_final_snapshot        = var.skip_final_snapshot
+  final_snapshot_identifier  = var.skip_final_snapshot ? null : "${var.name}-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
+  deletion_protection        = false
+  auto_minor_version_upgrade = true
 
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
 
