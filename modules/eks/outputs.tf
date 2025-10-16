@@ -83,3 +83,8 @@ output "kubectl_access_role_names" {
   description = "Map of kubectl access role names"
   value       = { for k, v in aws_iam_role.kubectl_access : k => v.name }
 }
+
+output "external_secrets_role_arn" {
+  description = "IAM role ARN for External Secrets Operator (IRSA)"
+  value       = aws_iam_role.external_secrets.arn
+}

@@ -73,6 +73,10 @@ jobs:
           cd modules/eks && terraform init -backend=false && terraform validate
           cd ../..
 
+          echo "Validating EKS Addons module..."
+          cd modules/eks-addons && terraform init -backend=false && terraform validate
+          cd ../..
+
           echo "Validating GitHub OIDC module..."
           cd modules/github-oidc && terraform init -backend=false && terraform validate
           cd ../..

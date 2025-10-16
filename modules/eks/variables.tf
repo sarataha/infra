@@ -37,6 +37,11 @@ variable "kubernetes_version" {
   description = "Kubernetes version (EKS supports 1.28-1.34 as of 2025)"
   type        = string
   default     = "1.34"
+
+  validation {
+    condition     = can(regex("^1\\.(2[8-9]|3[0-4])$", var.kubernetes_version))
+    error_message = "Kubernetes version must be between 1.28 and 1.34 (EKS supported versions as of 2025)."
+  }
 }
 
 variable "enable_public_access" {
@@ -85,12 +90,6 @@ variable "disk_size" {
   description = "Disk size in GB for worker nodes"
   type        = number
   default     = 20
-}
-
-variable "log_retention_days" {
-  description = "CloudWatch log retention in days"
-  type        = number
-  default     = 7
 }
 
 variable "environment" {
