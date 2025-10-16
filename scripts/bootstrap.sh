@@ -1,5 +1,5 @@
 #!/bin/bash
-# Setup Bootstrap Infrastructure
+# Setup Bootstrap Infra
 # This script creates:
 # 1. S3 bucket for Terraform state
 # 2. DynamoDB table for state locking
@@ -15,7 +15,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}  Bootstrap Infrastructure Setup${NC}"
+echo -e "${GREEN}  Bootstrap Infra Setup${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 
@@ -214,7 +214,7 @@ else
     aws iam create-policy \
         --policy-name "${POLICY_NAME}" \
         --policy-document "${POLICY_DOCUMENT}" \
-        --description "Least-privilege permissions for Terraform to manage EKS, VPC, RDS, and ECR infrastructure" \
+        --description "Least-privilege permissions for Terraform to manage EKS, VPC, RDS, and ECR infra" \
         --tags Key=Name,Value="Terraform Execution Policy" Key=Project,Value="${PROJECT_NAME}" Key=ManagedBy,Value=script \
         > /dev/null
     echo -e "${GREEN}✓ IAM policy created: ${POLICY_ARN}${NC}"
