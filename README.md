@@ -2,7 +2,7 @@
 
 AWS infra for the [configmirror-operator](https://github.com/sarataha/configmirror-operator) demo, built with Terraform and Terragrunt. Includes remote state management, DRY configuration and security controls.
 
-> I've added some improvements after submission - check out [PR #4](https://github.com/sarataha/infra/pull/4) for the security hardening and External Secrets Operator additions.
+> I've added some improvements after submission - check out [PR #5](https://github.com/sarataha/infra/pull/5) for the security hardening and External Secrets Operator additions.
 
 ## Architecture Overview
 
@@ -248,7 +248,7 @@ export TF_LOG=DEBUG
 - Single region deployment (us-east-1) - can be changed in root.hcl
 - Multi-AZ setup with 2 availability zones for high availability
 - VPC CIDR 10.0.0.0/16 - configurable via TG_VPC_CIDR env var
-- EKS public endpoint is set to 0.0.0.0/0 with IAM auth - all requests need valid AWS credentials. Makes it easier for dynamic IPs and GitHub Actions. But ideally in a prod env I'd restrict this to specific CIDR blocks or use a private-only endpoint with VPN/bastion host.
+- EKS public endpoint is set to 0.0.0.0/0 with IAM auth - all requests need valid AWS credentials. Makes it easier for dynamic IPs and GitHub Actions. But ideally in a od env I'd restrict this to specific CIDR blocks or use a private-only endpoint with VPN/bastion host.
 - EKS control plane placed in private subnets for security
 - RDS master username is "postgres" - standard default
 
