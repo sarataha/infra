@@ -2,6 +2,8 @@
 
 AWS infra for the [configmirror-operator](https://github.com/sarataha/configmirror-operator) demo, built with Terraform and Terragrunt. Includes remote state management, DRY configuration and security controls.
 
+> I've added some improvements after submission - check out [PR #3](https://github.com/sarataha/infra/pull/3) for the security hardening and External Secrets Operator additions.
+
 ## Architecture Overview
 
 Deploys EKS (K8s 1.34), RDS (PostgreSQL 17.6), ECR, VPC (Multi-AZ), IAM roles and GitHub OIDC for CI/CD.
