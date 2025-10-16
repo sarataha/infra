@@ -76,6 +76,7 @@ infra/
 │   ├── ecr/
 │   ├── rds/
 │   ├── eks/
+│   ├── eks-addons/
 │   └── github-oidc/
 ├── _global/
 │   └── ecr/
@@ -85,6 +86,7 @@ infra/
 │       ├── iam/
 │       ├── rds/
 │       ├── eks/
+│       ├── eks-addons/
 │       └── github-oidc/
 ├── scripts/
 │   ├── bootstrap.sh
@@ -129,6 +131,8 @@ Main config is in `environments/dev/terragrunt.hcl`. You might want to:
 
 GitHub Actions workflow with Terraform formatting, TFLint, Checkov security scanning and OIDC authentication. For production, I'd integrate Atlantis for PR-based Terraform workflows with plan/apply automation.
 
+I'd also add GitOps with ArgoCD or Flux to automate Kubernetes resource deployments from Git instead of manual kubectl commands - this would handle deploying the ExternalSecret manifests and other K8s resources automatically.
+
 ## State Management
 
 Uses S3 (`pawapay-terraform-state-<account-id>`) with DynamoDB locking (`pawapay-terraform-locks`).
@@ -168,7 +172,7 @@ terragrunt run --all plan
 terragrunt run --all apply
 ```
 
-Or deploy in order: VPC, IAM, ECR (_global/ecr), RDS, EKS, GitHub OIDC
+Or deploy in order: VPC, IAM, ECR (_global/ecr), RDS, EKS, eks-addons, GitHub OIDC
 
 ### Step 3: Verify
 
@@ -235,11 +239,16 @@ export TF_LOG=DEBUG
 ## Security & Assumptions
 
 **Security features:**
+- KMS encryption for EKS secrets, ECR images, RDS Secrets Manager, and VPC Flow Logs
+- VPC Flow Logs enabled with 365-day retention for audit compliance
+- ECR image tag immutability enforced
+- 365-day log retention for EKS control plane and VPC logs
+- External Secrets Operator for automated secret synchronization from AWS Secrets Manager
 - RDS encryption enabled with credentials in Secrets Manager
 - EKS nodes and RDS in private subnets
 - EKS control plane logging enabled
 - Terraform state encrypted in S3
-- kubectl access via IAM roles
+- kubectl access via IAM roles with RBAC
 - GitHub Actions use OIDC authentication
 
 **Assumptions made:**

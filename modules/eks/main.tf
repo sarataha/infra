@@ -95,6 +95,55 @@ resource "aws_kms_key" "eks" {
   deletion_window_in_days = 10
   enable_key_rotation     = true
 
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow EKS to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:CreateGrant"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow CloudWatch Logs to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.${data.aws_region.current.region}.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:CreateGrant",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+        Condition = {
+          ArnLike = {
+            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/eks/${var.cluster_name}/*"
+          }
+        }
+      }
+    ]
+  })
+
   tags = merge(
     local.common_tags,
     var.tags,
@@ -104,6 +153,9 @@ resource "aws_kms_key" "eks" {
   )
 }
 
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 resource "aws_kms_alias" "eks" {
   name          = "alias/${var.cluster_name}-eks"
   target_key_id = aws_kms_key.eks.key_id
@@ -111,7 +163,8 @@ resource "aws_kms_alias" "eks" {
 
 resource "aws_cloudwatch_log_group" "eks" {
   name              = "/aws/eks/${var.cluster_name}/cluster"
-  retention_in_days = var.log_retention_days
+  retention_in_days = 365
+  kms_key_id        = aws_kms_key.eks.arn
 
   tags = merge(local.common_tags, var.tags)
 }
@@ -196,8 +249,6 @@ resource "aws_iam_openid_connect_provider" "eks" {
 ################################################################################
 # EKS Access Entries for kubectl access
 ################################################################################
-
-data "aws_caller_identity" "current" {}
 
 locals {
   # Flatten policy associations per entry
@@ -288,3 +339,54 @@ resource "aws_eks_access_policy_association" "kubectl" {
 
   depends_on = [aws_eks_access_entry.kubectl]
 }
+
+################################################################################
+# External Secrets Operator
+################################################################################
+
+# IAM Role for External Secrets Operator (IRSA)
+resource "aws_iam_role" "external_secrets" {
+  name = "${var.cluster_name}-external-secrets"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:external-secrets:external-secrets"
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:aud" = "sts.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, var.tags)
+}
+
+# IAM Policy for External Secrets Operator to access Secrets Manager
+resource "aws_iam_role_policy" "external_secrets" {
+  name = "${var.cluster_name}-external-secrets-policy"
+  role = aws_iam_role.external_secrets.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
