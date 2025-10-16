@@ -92,12 +92,6 @@ variable "disk_size" {
   default     = 20
 }
 
-variable "log_retention_days" {
-  description = "CloudWatch log retention in days"
-  type        = number
-  default     = 7
-}
-
 variable "environment" {
   description = "Environment name (e.g., dev, staging, prod)"
   type        = string
