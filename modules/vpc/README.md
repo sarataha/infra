@@ -32,3 +32,4 @@ Creates a multi-AZ VPC with public and private subnets.
 | private_subnet_ids | List of private subnet IDs |
 | nat_gateway_ids | List of NAT gateway IDs |
 | internet_gateway_id | Internet gateway ID |
+#Updated
