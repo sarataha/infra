@@ -1,11 +1,3 @@
-locals {
-  common_tags = {
-    Environment = var.environment
-    Project     = var.project
-    ManagedBy   = "Terraform"
-  }
-}
-
 # Helm Release for External Secrets Operator
 resource "helm_release" "external_secrets" {
   count = var.enable_external_secrets ? 1 : 0

@@ -137,6 +137,7 @@ resource "aws_db_instance" "main" {
   allocated_storage = var.allocated_storage
   storage_type      = "gp3"
   storage_encrypted = true
+  kms_key_id        = aws_kms_key.rds.arn
 
   db_name  = var.database_name
   username = var.master_username
