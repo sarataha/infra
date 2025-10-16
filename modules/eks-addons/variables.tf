@@ -29,19 +29,3 @@ variable "enable_external_secrets" {
   type        = bool
   default     = true
 }
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-}
-
-variable "project" {
-  description = "Project name"
-  type        = string
-}
-
-variable "tags" {
-  description = "Additional tags"
-  type        = map(string)
-  default     = {}
-}

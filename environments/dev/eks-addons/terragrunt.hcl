@@ -27,7 +27,4 @@ inputs = {
   kubectl_admin_role_arn     = dependency.eks.outputs.kubectl_access_role_arns["admin"]
 
   enable_external_secrets = true
-
-  environment = "dev"
-  project     = "pawapay"
 }
