@@ -1,0 +1,32 @@
+compact: true
+framework:
+  - terraform
+
+# Skip intentional design decisions for demo environment
+skip-check:
+  # EKS public endpoint required for GitHub Actions CI/CD
+  - CKV_AWS_39
+  - CKV_AWS_38
+
+  # Security group egress needed for functionality
+  - CKV_AWS_382
+
+  # IAM wildcard resources for kubectl and VPC flow logs
+  - CKV_AWS_355
+  - CKV_AWS_290
+
+  # RDS simplifications for demo (password auth, no monitoring, no deletion protection)
+  - CKV_AWS_161
+  - CKV_AWS_293
+  - CKV_AWS_353
+  - CKV_AWS_118
+  - CKV2_AWS_30
+  - CKV2_AWS_60
+
+  # Not needed for demo
+  - CKV2_AWS_57  # Secrets rotation
+  - CKV2_AWS_12  # Default VPC SG
+  - CKV2_AWS_5   # Unused SG
+  - CKV_AWS_339  # EKS version (false positive)
+
+soft-fail: false
